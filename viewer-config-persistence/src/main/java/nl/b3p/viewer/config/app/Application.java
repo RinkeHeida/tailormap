@@ -662,6 +662,7 @@ public class Application implements Comparable<Application>{
         
         em.persist(copy);
         em.flush();
+        copy.processCopyMap();
         Application prev = em.createQuery("FROM Application where id = :id", Application.class).setParameter("id", base.getId()).getSingleResult();
         copy.processBookmarks(prev, context, em);
         SelectedContentCache.setApplicationCacheDirty(copy, Boolean.TRUE, false, em);
