@@ -15,7 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /* global ol, Ext */
-
+/**
+ * @class
+ * @description
+ * The openlayers map object wrapper
+ */
 Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
     extend: "viewer.viewercontroller.controller.Map",
     layersLoading: null,
@@ -87,11 +91,23 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
         this.markerLayer = null;
         this.defaultIcon = {};
         this.markerIcons = {
-            "default": contextPath + '/viewer-html/common/openlayers/img/marker.png',
-            "spinner": contextPath + '/resources/images/spinner.gif'
+            "default": {
+                "icon": FlamingoAppLoader.get('contextPath') + '/viewer-html/common/openlayers/img/marker.png',
+                "defaultSize": 17,
+                "align": "bottom"
+            },
+            "circle": {
+                "icon": FlamingoAppLoader.get('contextPath') + '/resources/images/circle.svg',
+                "defaultSize": 25,
+                "align": "center"
+            },
+            "spinner": {
+                "icon": FlamingoAppLoader.get('contextPath') + '/resources/images/spinner.gif',
+                "defaultSize": 17,
+                "align": "bottom"
+            }
         };
         this.markers = new Object();
-        this.getFeatureInfoControl = null;
 
         this.addListener(viewer.viewercontroller.controller.Event.ON_LAYER_REMOVED, me.layerRemoved, me);
 
@@ -106,10 +122,38 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
         return this;
     },
 
+    /**
+     *See @link Map.getAllWMSLayers
+     */
+    getAllWMSLayers : function(){
+        var lagen = new Array();
+        for(var i = 0 ; i < this.layers.length;i++){
+            if(this.layers[i] instanceof viewer.viewercontroller.ol.OlWMSLayer){
+                lagen.push(this.layers[i]);
+            }
+        }
+        return lagen;
+    },
+
+    /**
+     *See @link Map.getAllVectorLayers
+     */
+    getAllVectorLayers : function(){
+        var lagen = new Array();
+        for(var i = 0 ; i < this.layers.length;i++){
+            if(this.layers[i] instanceof viewer.viewercontroller.ol.OlVectorLayer){
+                lagen.push(this.layers[i]);
+            }
+        }
+        return lagen;
+    },
+
+    /**
+     *Add a layer. Also see @link Map.addLayer
+     **/
     addLayer: function (layer) {
         var me = this;
         this.superclass.addLayer.call(this, layer);
-        //delete layer.getFrameworkLayer().id;
         var map = this.getFrameworkMap();
         var l = layer.getFrameworkLayer();
         if (layer.id === undefined) {
@@ -127,6 +171,9 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
         }
     },
 
+    /**
+     *remove the specific layer. See @link Map.removeLayer
+     **/
     removeLayer: function (layer) {
         //remove layer from framework
         this.getFrameworkMap().removeLayer(layer.getFrameworkLayer());
@@ -137,90 +184,180 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
          */
     },
 
+    layerRemoved: function (map, options) {
+        var l = options.layer.getFrameworkLayer();
+        for (var i = 0; i < this.layers.length; i++) {
+            var frameworkLayer = this.layers[i].getFrameworkLayer();
+            if (frameworkLayer.get('id') === l.get('id')) {
+                this.layers.splice(i, 1);
+                break;
+            }
+        }
+    },
+
     setLayerVisible: function (layer, visible) {
         this.superclass.setLayerVisible.call(this, layer, visible);
         layer.setVisible(visible);
     },
 
-    updateSize: function () {
-        this.getFrameworkMap().updateSize();
+    /**
+     * Move the viewport to the maxExtent. See @link Map.zoomToMaxExtent
+     **/
+    zoomToMaxExtent : function (){
+        this.getFrameworkMap().zoomToExtent(this.restrictedExtent);
     },
 
-    getResolution: function () {
-        return this.getFrameworkMap().getView().getResolution();
+    /**
+     * See @link Map.zoomToExtent
+     **/
+    zoomToExtent: function (extent) {
+        var bounds = this.utils.createBounds(extent);
+        this.frameworkMap.getView().fit(bounds, this.frameworkMap.getSize());
     },
 
-    getResolutions: function () {
-        return this.getFrameworkMap().getView().getResolutions();
+    /**
+     * See @link Map.zoomToResolution
+     */
+    zoomToResolution: function (resolution) {
+        return this.getFrameworkMap().getView().setZoom(this.getFrameworkMap().getView().getZoomForResolution(resolution));
     },
 
-    getScale: function () {
-        return this.getFrameworkMap().getView().getResolution();
-    },
-
-    getActualScale: function () {
-        var unit = this.getFrameworkMap().getView().getProjection().getUnits();
-        var resolution = this.getFrameworkMap().getView().getResolution();
-        if (this.unit === "degrees") {
-            return "";
-        } else {
-            var scale = this.utils.getScaleFromResolution(resolution, unit);
-            return Math.round(scale);
-        }
-    },
-
+    /**
+     * See @link viewer.viewercontroller.controller.Map#moveTo
+     */
     moveTo: function (x, y) {
         var center = [x, y];
         this.getFrameworkMap().getView().setCenter(center);
         new ol.geom.Point(center);
     },
 
-    zoomToResolution: function (resolution) {
-        return this.getFrameworkMap().getView().setZoom(this.getFrameworkMap().getView().getZoomForResolution(resolution));
-
+    /**
+     * See @link Map.setMaxExtent
+     */
+    setMaxExtent : function(extent){
+        console.log("SetMaxExtent not yet implemented for OL 5");
     },
 
-    setMarker: function (markerName, x, y, type) {
-        if (this.markers[markerName] === undefined) {
-            var positionFeature = new ol.Feature();
-            positionFeature.setStyle(new ol.style.Style({
-                image: new ol.style.Icon({
-                    src: this.markerIcons.default
-                })
-            }));
+    /**
+     * See @link Map.getMaxExtent
+     */
+    getMaxExtent : function(){
+        return this.restrictedExtent;
+    },
 
-            var center = [x, y];
-            positionFeature.setGeometry(new ol.geom.Point(center));
-            this.markers[markerName] = positionFeature;
-        } else {
-            this.markers[markerName].setGeometry(new ol.geom.Point([x, y]));
-            return;
-        }
+    /**
+     * See @link Map.getExtent
+     */
+    getExtent: function () {
+        var extent = this.getFrameworkMap().getView().calculateExtent(this.getFrameworkMap().getSize());
+        return this.utils.createExtent(extent);
+    },
+
+    /**
+     *see @link Map.setMarker
+     *TODO: marker icon path...
+     */
+    setMarker: function (markerName, x, y, type) {
         if (this.markerLayer === null) {
             this.markerLayer = new ol.layer.Vector({
-                source: new ol.source.Vector({
-                    features: [this.markers[markerName]]
-                })
+                source: new ol.source.Vector({})
             });
             this.frameworkMap.addLayer(this.markerLayer);
-        } else {
+        }
+        if(!type){
+            type = "default";
+        }
+        if(!Ext.isDefined(this.defaultIcon[type])){
+            var marker = this.markerIcons.hasOwnProperty(type) ? this.markerIcons[type] : this.markerIcons['default'];
+            this.defaultIcon [type] =  new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: marker.icon,
+                    scale:0.8,
+                    anchor: [0.5,1]
+
+                })
+            });
+        }
+        var defaultIcon = this.defaultIcon[type];
+        if (this.markers[markerName] === undefined) {
+            var positionFeature = new ol.Feature({
+                geometry: new ol.geom.Point([x, y])
+            });
+            positionFeature.setStyle(defaultIcon);
+            this.markers[markerName] = positionFeature;
             this.markerLayer.getSource().addFeature(this.markers[markerName]);
+        } else {
+            this.markers[markerName].setGeometry(new ol.geom.Point([x, y]));
         }
     },
 
+    /**
+     * see @link Map.removeMarker
+     */
     removeMarker: function (markerName) {
         if (this.markers[markerName] && this.markerLayer !== null) {
             this.markerLayer.getSource().removeFeature(this.markers[markerName]);
-            //this.markers[markerName].destroy(); 
             delete this.markers[markerName];
         }
     },
 
-    zoomToExtent: function (extent) {
-        var bounds = this.utils.createBounds(extent);
-        this.frameworkMap.getView().fit(bounds, this.frameworkMap.getSize());
+    /**
+     * @see Ext.util.Observable#addListener
+     * @param event the event
+     * @param handler the handler
+     * @param scope the scope
+     * TODO check events in OL5
+     */
+    addListener: function (event, handler, scope) {
+        var me = this;
+        var olSpecificEvent = this.viewerController.mapComponent.getSpecificEventName(event);
+        if (olSpecificEvent) {
+            if (!scope) {
+                scope = this;
+            }
+
+            if (this.enabledEvents[olSpecificEvent]) {
+                this.enabledEvents[olSpecificEvent]++;
+            } else {
+                this.enabledEvents[olSpecificEvent] = 1;
+                this.frameworkMap.on(olSpecificEvent, function (args) {
+                    me.handleEvent(args);
+                }, me);
+            }
+        }
+        viewer.viewercontroller.ol.OpenLayers5Map.superclass.addListener.call(this, event, handler, scope);
     },
 
+    /**
+     * @see Ext.util.Observable#removeListener
+     * @param event the event
+     * @param handler the handler
+     * @param scope the scope
+     * TODO check events in OL5
+     */
+    removeListener: function (event, handler, scope) {
+        var olSpecificEvent = this.viewerController.mapComponent.getSpecificEventName(event);
+        if (olSpecificEvent) {
+            if (!scope) {
+                scope = this;
+            }
+            if (this.enabledEvents[olSpecificEvent]) {
+                this.enabledEvents[olSpecificEvent]--;
+                if (this.enabledEvents[olSpecificEvent] <= 0) {
+                    this.enabledEvents[olSpecificEvent] = 0;
+                    this.frameworkMap.un(olSpecificEvent, this.handleEvent, this);
+                }
+            }
+            viewer.viewercontroller.ol.OpenLayers5Map.superclass.removeListener.call(this, event, handler, scope);
+        } else {
+            this.viewerController.logger.warning("Event not listed in OpenLayersMapComponent >" + event + "<. The application  might not work correctly.");
+        }
+    },
+
+    /**
+     * Handles the events fired by OpenLayers.Map and propagates them to the registered objects.
+     *
+     */
     handleEvent: function (args) {
         if (args.tempType) {
             var event = args.tempType;
@@ -253,8 +390,8 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
                 return;
             }
         } else if (genericEvent === viewer.viewercontroller.controller.Event.ON_FINISHED_CHANGE_EXTENT ||
-                genericEvent === viewer.viewercontroller.controller.Event.ON_ZOOM_END ||
-                genericEvent === viewer.viewercontroller.controller.Event.ON_CHANGE_EXTENT) {
+            genericEvent === viewer.viewercontroller.controller.Event.ON_ZOOM_END ||
+            genericEvent === viewer.viewercontroller.controller.Event.ON_CHANGE_EXTENT) {
             options.extent = this.getExtent();
         } else {
             this.config.viewerController.logger.error("The event " + genericEvent + " is not implemented in the OlMap.handleEvent()");
@@ -262,69 +399,60 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
         this.fireEvent(genericEvent, this, options);
     },
 
-    getLayerByOpenLayersId: function (olId) {
-        for (var i = 0; i < this.layers.length; i++) {
-            if (this.layers[i].frameworkLayer) {
-                if (this.layers[i].id === olId) {
-                    return this.layers[i];
-                }
-            }
-        }
+    /**
+     *See @link Map.getScale
+     *@deprecated, use getResolution because it returns the resolution and not the scale
+     */
+    getScale: function () {
+        return this.getFrameworkMap().getView().getResolution();
     },
 
-    layerRemoved: function (map, options) {
-        var l = options.layer.getFrameworkLayer();
-        for (var i = 0; i < this.layers.length; i++) {
-            var frameworkLayer = this.layers[i].getFrameworkLayer();
-            if (frameworkLayer.get('id') === l.get('id')) {
-                this.layers.splice(i, 1);
-                break;
-            }
-        }
-    },
-
-    addListener: function (event, handler, scope) {
-        var me = this;
-        var olSpecificEvent = this.viewerController.mapComponent.getSpecificEventName(event);
-        if (olSpecificEvent) {
-            if (!scope) {
-                scope = this;
-            }
-            /* Add event to OpenLayersMap only once, to prevent multiple fired events.    
-             * count the events for removing the listener again.
-             */
-            if (this.enabledEvents[olSpecificEvent]) {
-                this.enabledEvents[olSpecificEvent]++;
-            } else {
-                this.enabledEvents[olSpecificEvent] = 1;
-                this.frameworkMap.on(olSpecificEvent, function (args) {
-                    me.handleEvent(args);
-                }, me);
-            }
-        }
-        viewer.viewercontroller.ol.OpenLayers5Map.superclass.addListener.call(this, event, handler, scope);
-    },
-
-    removeListener: function (event, handler, scope) {
-        var olSpecificEvent = this.viewerController.mapComponent.getSpecificEventName(event);
-        if (olSpecificEvent) {
-            if (!scope) {
-                scope = this;
-            }
-            /* Remove event from OpenLayersMap if the number of events == 0
-             * If there are no listeners for the OpenLayers event, remove the listener.             
-             */
-            if (this.enabledEvents[olSpecificEvent]) {
-                this.enabledEvents[olSpecificEvent]--;
-                if (this.enabledEvents[olSpecificEvent] <= 0) {
-                    this.enabledEvents[olSpecificEvent] = 0;
-                    this.frameworkMap.un(olSpecificEvent, this.handleEvent, this);
-                }
-            }
-            viewer.viewercontroller.ol.OpenLayers5Map.superclass.removeListener.call(this, event, handler, scope);
+    getActualScale: function () {
+        var unit = this.getFrameworkMap().getView().getProjection().getUnits();
+        var resolution = this.getFrameworkMap().getView().getResolution();
+        if (this.unit === "degrees") {
+            return "";
         } else {
-            this.viewerController.logger.warning("Event not listed in OpenLayersMapComponent >" + event + "<. The application  might not work correctly.");
+            var scale = this.utils.getScaleFromResolution(resolution, unit);
+            return Math.round(scale);
         }
+    },
+
+    /**
+     *See @link Map.getResolution
+     */
+    getResolution: function () {
+        return this.getFrameworkMap().getView().getResolution();
+    },
+
+    /**
+     *See @link Map.getResolutions
+     */
+    getResolutions: function () {
+        return this.getFrameworkMap().getView().getResolutions();
+    },
+
+    /**
+     *See @link Map.coordinateToPixel
+     *@returns {a} pixel object (has a .x and a .y)
+     */
+    coordinateToPixel : function(x,y){
+        var pixel  = this.getFrameworkMap().getPixelFromCoordinate([x,y]);
+        return {x: pixel[0], y: pixel[1]};
+    },
+
+    pixelToCoordinate : function (x,y){
+        var coord = this.getFrameworkMap().getCoordinateFromPixel([x,y]);
+        return {x: coord[0],y: coord[1]};
+    },
+
+    /**
+     *see @link Map.getCenter
+     *@return {a} LonLat object with .x references to .lon and .y references to .lat
+     */
+    getCenter : function(){
+        var coord = this.getFrameworkMap().getView().getCenter();
+        return {x: coord[0], y: coord[1]};
     },
 
     getWidth: function () {
@@ -337,12 +465,17 @@ Ext.define("viewer.viewercontroller.ol.OpenLayers5Map", {
         return size[1];
     },
 
-    getExtent: function () {
-        var extent = this.getFrameworkMap().getView().calculateExtent(this.getFrameworkMap().getSize());
-        return this.utils.createExtent(extent);
+    updateSize: function () {
+        this.getFrameworkMap().updateSize();
     },
 
-    getRestrictedExtent: function () {
-        return this.restrictedExtent;
-    }
+    getLayerByOpenLayersId: function (olId) {
+        for (var i = 0; i < this.layers.length; i++) {
+            if (this.layers[i].frameworkLayer) {
+                if (this.layers[i].id === olId) {
+                    return this.layers[i];
+                }
+            }
+        }
+    },
 });
