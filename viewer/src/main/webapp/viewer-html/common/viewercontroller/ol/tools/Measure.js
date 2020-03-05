@@ -93,6 +93,7 @@ Ext.define("viewer.viewercontroller.ol.tools.Measure",{
         var draw = new ol.interaction.Draw({
             source:source,
             type: type,
+            stopClick: true,
             style: new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: 'rgba(255, 255, 255, 0.2)'
