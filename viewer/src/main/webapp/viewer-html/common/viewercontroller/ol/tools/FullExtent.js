@@ -35,7 +35,7 @@ Ext.define("viewer.viewercontroller.ol.tools.FullExtent", {
 
     activate: function () {
         //var extent = this.mapComponent.maps[0].getFrameworkMap().getView().getProjection().getExtent();
-        var extent = this.mapComponent.getMap().getRestrictedExtent();
+        var extent = this.mapComponent.getMap().getMaxExtent();
         this.mapComponent.maps[0].getFrameworkMap().getView().fit(extent, this.mapComponent.maps[0].getFrameworkMap().getSize());
     },
 
