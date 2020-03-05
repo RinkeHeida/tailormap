@@ -326,9 +326,6 @@ Ext.define("viewer.viewercontroller.OlMapComponent", {
             comp = Ext.create("viewer.viewercontroller.ol.OlComponent", config, panZoomBar);
         } else if (type === viewer.viewercontroller.controller.Component.COORDINATES) {
             var options = {numDigits: config.decimals};
-            if (this.contentBottom) {
-                options.div = this.contentBottom;
-            }
             config.cssClass = "ol-mouse-position";
             config.defaultAlignPosition = "tr";
             comp = Ext.create("viewer.viewercontroller.ol.OlComponent", config, new ol.control.MousePosition({projection: config.projection,
@@ -340,12 +337,7 @@ Ext.define("viewer.viewercontroller.OlMapComponent", {
             if (!Ext.isEmpty(config.units)) {
                 frameworkOptions.topOutUnits = config.units;
             }
-            
-            if (this.contentBottom) {
-                frameworkOptions.target = this.contentBottom;
-                config.cssClass = "olControlScale";
-            }
-            
+
             if(frameworkOptions.topOutUnits ===  "m" || frameworkOptions.topOutUnits ===  "metric"){
                 frameworkOptions.topOutUnits = "metric";
             } else if(frameworkOptions.topOutUnits ===  "d" || frameworkOptions.topOutUnits ===  "degrees"){
@@ -454,10 +446,10 @@ Ext.define("viewer.viewercontroller.OlMapComponent", {
         if (!(tool instanceof Array)) {
             this.superclass.addTool.call(this, tool);
             //check if this is the first tool, activate it.
-            if (tool.getVisible()) {
+            if (tool.getVisible() && !tool.getPreventActivationAsFirstTool()) {
                 var toolsVisible = 0;
                 for (var i = 0; i < this.tools.length; i++) {
-                    if (this.tools[i].getVisible()) {
+                    if (this.tools[i].getVisible() && !this.tools[i].getPreventActivationAsFirstTool()) {
                         toolsVisible++;
                     }
                 }
