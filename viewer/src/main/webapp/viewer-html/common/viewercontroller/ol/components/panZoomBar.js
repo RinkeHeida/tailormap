@@ -269,7 +269,7 @@ SOFTWARE.
         }else if(direction == 'zoomMax'){
             var extent = null;
             if(this.ownmap){
-                extent = this.ownmap.getMap().getRestrictedExtent();
+                extent = this.ownmap.getMap().getMaxExtent();
             }
             else{
                 extent = map.getView().getProjection().getExtent();
