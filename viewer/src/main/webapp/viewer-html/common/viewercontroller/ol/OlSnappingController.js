@@ -96,7 +96,6 @@ Ext.define("viewer.viewercontroller.ol.OlSnappingController", {
                 style: this.me.style
             }
             );
-            this.me.snapLayers.push(this.me.frameworkLayer);
             this.me.frameworkMap.addLayer(this.me.frameworkLayer);
         }
 
@@ -207,9 +206,14 @@ Ext.define("viewer.viewercontroller.ol.OlSnappingController", {
     },
 
     removeAll: function () {
-        this.frameworkLayer.getSource().clear();
-        this.snapLayers = [];
-        this.deactivate();
+        var me = this;
+        this.snapLayers = [];	        //without time out features are still visible until user pans
+        this.deactivate();	        //source.refresh() doesn't work..?
+        setTimeout(function(){
+            me.frameworkLayer.getSource().clear();
+            me.snapLayers = [];
+            me.deactivate();
+        }, 500);
     },
 
     activate: function () {
