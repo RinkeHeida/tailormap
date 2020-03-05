@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2019 B3Partners B.V.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -106,93 +106,98 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
         this.maps.addInteraction(this.modify);
         this.select.setActive(false);
         this.drawBox.setActive(false);
-        
+
         this.point = new ol.interaction.Draw({type: "Point",
             source: this.source,
-            freehand: false
+            freehand: false,
+            stopClick: true
         });
         this.maps.addInteraction(this.point);
         this.point.setActive(false);
-        
+
         this.line = new ol.interaction.Draw({type: "LineString",
             source: this.source,
-            freehand: false
+            freehand: false,
+            stopClick: true
         });
         this.maps.addInteraction(this.line);
         this.line.setActive(false);
-        
+
         this.polygon = new ol.interaction.Draw({type: "Polygon",
             source: this.source,
-            freehand: false
+            freehand: false,
+            stopClick: true
         });
         this.maps.addInteraction(this.polygon);
         this.polygon.setActive(false);
-        
+
         this.circle = new ol.interaction.Draw({type: "Circle",
             source: this.source,
-            freehand: false
+            freehand: false,
+            stopClick: true
         });
         this.maps.addInteraction(this.circle);
         this.circle.setActive(false);
-        
+
         this.box = new ol.interaction.Draw({type: "Box",
             source: this.source,
-            freehand: true
+            freehand: true,
+            stopClick: true
         });
         this.maps.addInteraction(this.box);
         this.box.setActive(false);
-        
+
         this.freehand = new ol.interaction.Draw({type: "Freehand",
             source: this.source,
             freehand: true
         });
         this.maps.addInteraction(this.freehand);
         this.freehand.setActive(false);
-        
+
         this.point.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.line.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.polygon.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.circle.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.box.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.freehand.on('drawend', function (evt) {
             me.select.setActive(true);
             evt.feature.setId("OpenLayers_Feature_Vector_" + me.idNumber);
             me.idNumber++;
             me.stopDrawing();
         }, this);
-        
+
         this.type = viewer.viewercontroller.controller.Layer.VECTOR_TYPE;
-        
+
     },
 
     getCurrtentStyle: function () {
@@ -311,8 +316,8 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
             }
             olFeature.setStyle(olFeature.getStyle());
         }
-        
-        
+
+
         this.frameworkLayer.getSource().refresh();
     },
     /**
@@ -404,10 +409,10 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
         }
 
         var feature = new viewer.viewercontroller.controller.Feature(
-                {
-                    id: openLayersFeature.getId(),
-                    wktgeom: wkt
-                });
+            {
+                id: openLayersFeature.getId(),
+                wktgeom: wkt
+            });
         if (openLayersFeature.getStyle()) {
             if (openLayersFeature.getStyle().getText()) {
                 feature.label = openLayersFeature.getStyle().getText().getText();
@@ -568,7 +573,7 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
             } else if (featureStyle.config.strokeDashstyle === "dash") {
                 lineDash = [10, 10];
             }
-            
+
             if (featureStyle.config.labelAlign === "cm") {
                 offsetX = 0;
             } else if (featureStyle.config.labelAlign === "rm") {
@@ -576,11 +581,11 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
             } else if (featureStyle.config.labelAlign === "lm") {
                 offsetX = 50;
             }
-            
+
             if(olFeature.getStyle().getText() !== null){
                 label = olFeature.getStyle().getText().getText();
             }
-            
+
             var strokeStyle = new ol.style.Stroke({
                 color: featureStyle.config.strokeColor,
                 width: featureStyle.config.strokeWidth,
@@ -590,13 +595,13 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
             var fillStyle = new ol.style.Fill({
                 color: colorFinal
             });
-            
+
             var text = new ol.style.Text({
                 text: label,
                 offsetX: offsetX,
                 font: featureStyle.config.fontStyle + " " + featureStyle.config.fontWeight + " " + featureStyle.config.fontSize + " sans-serif"
             });
-            
+
             var style = new ol.style.Style({
                 stroke: strokeStyle,
                 fill: fillStyle,
@@ -612,4 +617,3 @@ Ext.define("viewer.viewercontroller.ol.OlVectorLayer", {
         }
     }
 });
-   
