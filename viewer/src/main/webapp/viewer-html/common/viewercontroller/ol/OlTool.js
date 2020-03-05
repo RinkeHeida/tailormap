@@ -29,7 +29,7 @@ Ext.define("viewer.viewercontroller.ol.OlTool", {
         this.controls = new Array();
         this.enabledEvents = new Object();
         this.setTool(conf);
-        conf.active = true;
+        conf.active = false;
         this.overwriteStyle(conf);
         return this;
     },
