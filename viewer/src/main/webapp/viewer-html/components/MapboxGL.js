@@ -182,6 +182,29 @@ Ext.define("viewer.components.MapboxGL", {
                 },
                 beforeId
             );
+
+            // // voor omgevingsserver
+            // this._mapGl.addLayer({
+            //         'id': mbLyrOpts['id'],
+            //         'source': {
+            //             type: "vector",
+            //             url: "https://b3partners.omgevingsserver.nl/vector-tiles/data/panden-map/{z}/{x}/{y}.pbf&apikey="
+            //         },
+            //         'source-layer': 'pand',
+            //         'type':'fill',
+            //         'minzoom': 15,
+            //         //         'filter': ['==', 'extrude', 'true'],
+            //         //         'type': 'fill-extrusion',
+            // //         'paint': {
+            // //             'fill-extrusion-color': '#81ff6b',
+            // //             // use an 'interpolate' expression to add a smooth transition effect to the buildings as the user zooms in
+            // //             'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+            // //             'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+            // //             'fill-extrusion-opacity': 0.6
+            // //         }
+            //     },
+            //     beforeId
+            // );
         }
     },
     /**
