@@ -11,6 +11,7 @@ import { ExportFeaturesParameters } from '../../../shared/export-service/export-
 import { Layer } from '../layer.model';
 import { LayerService } from '../layer.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AttributelistFilterService } from '../attributelist-common/attributelist-filter.service';
 
 @Component({
   selector: 'tailormap-attributelist-tab-toolbar',
@@ -23,6 +24,8 @@ export class AttributelistTabToolbarComponent implements OnInit {
 
   public columns: AttributelistColumn[];
 
+  private valueFilter: string;
+
   private exportParams: ExportFeaturesParameters = {
     application: 0,
     appLayer: 0,
@@ -33,13 +36,15 @@ export class AttributelistTabToolbarComponent implements OnInit {
   constructor(
       private exportService: ExportService,
       private layerService: LayerService,
+      private attributeFilterService: AttributelistFilterService,
       private columnData: AttributelistColumnsService,
       private _snackBar: MatSnackBar) {
   }
 
   public ngOnInit(): void {
     this.exportParams.application = this.layerService.getAppId();
-    this.columnData.column$.subscribe(message => this.columns = message)
+    this.columnData.column$.subscribe(message => this.columns = message);
+    this.attributeFilterService.valueFilter$.subscribe( message => this.valueFilter = message);
   }
 
   /**
@@ -48,6 +53,7 @@ export class AttributelistTabToolbarComponent implements OnInit {
   public onExportClick(format: string): void {
     this.exportParams.appLayer =  this.layer.id;
     this.exportParams.type = format;
+    this.exportParams.filter = this.valueFilter;
     this.exportParams.columns = [];
     this.columns.forEach(c => {
       if (c.visible) {

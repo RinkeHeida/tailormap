@@ -15,6 +15,7 @@ import { AttributeService } from '../../../shared/attribute-service/attribute.se
 import { LayerService } from '../layer.service';
 import { FormconfigRepositoryService } from '../../../shared/formconfig-repository/formconfig-repository.service';
 import { RelatedFeatureType } from '../../test-attributeservice/models';
+import { AttributelistFilterService } from '../attributelist-common/attributelist-filter.service';
 
 @Component({
   selector: 'tailormap-attributelist-details',
@@ -45,10 +46,12 @@ export class AttributelistDetailsComponent implements OnInit,
 
   public dataSource = new AttributeDataSource(this.layerService,
                                               this.attributeService,
-    this.formconfigRepoService);
+                                              this.attributelistFilterService,
+                                              this.formconfigRepoService);
 
   constructor(private attributeService: AttributeService,
               private layerService: LayerService,
+              private attributelistFilterService: AttributelistFilterService,
               private formconfigRepoService: FormconfigRepositoryService) {
     // console.log('#Details - constructor');
   }

@@ -18,6 +18,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { AttributelistTable, RowClickData, RowData } from '../attributelist-common/attributelist-models';
 import { AttributeDataSource } from '../attributelist-common/attributelist-datasource';
 import { AttributelistFilter } from '../attributelist-common/attributelist-filter';
+import { AttributelistFilterService } from '../attributelist-common/attributelist-filter.service';
 import { AttributelistFilterValuesFormComponent } from '../attributelist-filter-values-form/attributelist-filter-values-form.component';
 import { AttributelistColumn } from '../attributelist-common/attributelist-column-models';
 import { AttributelistTableOptionsFormComponent } from '../attributelist-table-options-form/attributelist-table-options-form.component';
@@ -67,6 +68,7 @@ export class AttributelistTableComponent implements AttributelistTable, OnInit, 
 
   public dataSource = new AttributeDataSource(this.layerService,
                                               this.attributeService,
+                                              this.attributelistFilterService,
                                               this.formconfigRepoService);
 
   public filter = new AttributelistFilter();
@@ -91,6 +93,7 @@ export class AttributelistTableComponent implements AttributelistTable, OnInit, 
   constructor(private attributeService: AttributeService,
               private layerService: LayerService,
               private valueService: ValueService,
+              private attributelistFilterService: AttributelistFilterService,
               private attributelistService: AttributelistService,
               private formconfigRepoService: FormconfigRepositoryService,
               private dialog: MatDialog) {
@@ -288,7 +291,7 @@ export class AttributelistTableComponent implements AttributelistTable, OnInit, 
               this.filter.layerFilterValues.columns[colIndex].nullValue = false;
               this.filter.layerFilterValues.columns[colIndex].status = false;
             }
-            this.dataSource.params.valueFilter = this.filter.createFilter();
+            this.dataSource.setValueFilter(this.filter.createFilter());
             this.updateTable();
           }
         });

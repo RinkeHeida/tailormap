@@ -14,6 +14,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { AttributelistTable, RowData } from './attributelist-models';
 import { AttributelistColumnController } from './attributelist-column-controller';
 import { AttributeService } from '../../../shared/attribute-service/attribute.service';
+import { AttributelistFilterService } from './attributelist-filter.service';
 import { AttributeListParameters, AttributeListResponse,
   AttributeMetadataParameters, AttributeMetadataResponse } from '../../test-attributeservice/models';
 import { CheckState, DetailsState } from './attributelist-enums';
@@ -43,6 +44,7 @@ export class AttributeDataSource extends DataSource<any> {
 
   constructor(private layerService: LayerService,
               private attributeService: AttributeService,
+              private attributelistFilterService: AttributelistFilterService,
               private formconfigRepoService: FormconfigRepositoryService) {
     super();
   }
@@ -108,6 +110,14 @@ export class AttributeDataSource extends DataSource<any> {
       }
     });
     return cnt;
+  }
+
+  /**
+   * Sets the CQL filter string for unique values
+   */
+  public setValueFilter(valueFilter: string) {
+    this.params.valueFilter = valueFilter;
+    this.attributelistFilterService.changeMessage(valueFilter);
   }
 
   /**

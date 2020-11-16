@@ -6,6 +6,7 @@ export interface ExportFeaturesParameters {
   columns: string[];
   type: string; // Export type (SHP, XLS, etc)
   featureType?: number;
+  filter?: string;
   debug?: boolean;
   params?: string; // Other parameters (filter etc?)
 }
